@@ -10,6 +10,9 @@ class Agent_dal(DAL):
         self.con = None
         
     def create(self, agent: Agent) -> None:
+        if self.get_by_codeName(agent.codeName) is not None:
+            print("Agent already exists with the same codeName")
+            return
         self.con.add(agent)
         self.con.commit()
     
@@ -20,7 +23,7 @@ class Agent_dal(DAL):
         return self.con.query(Agent).filter_by(realName=realName)
     
     def get_by_codeName(self, codeName:str) -> list[Agent] | Agent:
-        return self.con.query(Agent).filter_by(codeName=codeName)
+        return self.con.query(Agent).filter_by(codeName=codeName).first()
     
     def get_by_id(self, agent_id:int) -> Agent:
         return self.con.query(Agent).filter_by(id=agent_id).first()
@@ -41,13 +44,11 @@ class Agent_dal(DAL):
     
     def __enter__(self):
         self.con = self.session()
-        print("Connection opened")
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
         if self.con:
             self.con.close()
-            print("Connection closed")
     
 
 if __name__ == "__main__":

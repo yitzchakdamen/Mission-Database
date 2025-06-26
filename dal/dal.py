@@ -20,8 +20,8 @@ class DAL:
         return cls._instance
     
     def __init__(self):
-        self.engine = create_engine(f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}",echo=True) # חיבור 
-        Base.metadata.create_all(self.engine) #  יצירת טבלה במסד אם לא קיימת 
+        self.engine = create_engine(f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}",echo=False) # חיבור 
+        Base.metadata.create_all(self.engine)
         self.session = sessionmaker(bind=self.engine)
         
         
