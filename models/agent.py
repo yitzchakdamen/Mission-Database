@@ -3,10 +3,10 @@ from sqlalchemy import Column, Integer, String, Enum as SQLEnum
 from dal.base import Base
 
 class Status(Enum_class):
-    Active = "Active"
-    Injured = "Injured"
-    Missing = "Missing"
-    Retired = "Retired"
+    Active = 1
+    Injured = 2
+    Missing = 3
+    Retired = 4
 
 
 class Agent(Base):
@@ -21,7 +21,7 @@ class Agent(Base):
     missionsCompleted = Column(Integer, nullable=False)
     
     def __new__(cls,  *args, **kwargs):
-        print(f"__ {cls.__name__} created! __")
+        # print(f"__ {cls.__name__} created! __")
         return object.__new__(cls)
 
     def __str__(self) -> str:

@@ -1,0 +1,133 @@
+from PySide6.QtWidgets import QMainWindow, QApplication, QComboBox, QLineEdit, QTextEdit, QPushButton, QMessageBox
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import QFile, QIODevice
+from models.agent import Agent, Status
+from dal.agent_dal import Agent_dal
+import sys
+
+class AgentMenu(QMainWindow):
+    def __init__(self, dal: Agent_dal):
+        super().__init__()
+        self.dal = dal
+        self.load_ui()
+        self.setup_connections()
+
+    def load_ui(self):
+        loader = QUiLoader()
+        file = QFile("untitled.ui")
+        file.open(QIODevice.ReadOnly)
+        self.ui = loader.load(file, self)
+        file.close()
+        self.setCentralWidget(self.ui)
+        self.setWindowTitle("Agent Management System")
+
+    def setup_connections(self):
+        self.ui.addButton.clicked.connect(self.add_agent)
+        self.ui.updateButton.clicked.connect(self.update_agent)
+        self.ui.getButton.clicked.connect(self.get_agent)
+        self.ui.deleteButton.clicked.connect(self.delete_agent)
+        self.ui.getAllButton.clicked.connect(self.get_all_agents)
+        self.ui.exitButton.clicked.connect(self.close)
+        self.ui.searchCombo.currentTextChanged.connect(self.toggle_search_input)
+
+    def toggle_search_input(self, text):
+        if text == "ID":
+            self.ui.searchInput.setPlaceholderText("Enter Agent ID")
+        else:
+            self.ui.searchInput.setPlaceholderText("Enter Agent CodeName")
+
+    def add_agent(self):
+        name = self.ui.nameInput.text().strip()
+        codeName = self.ui.codeNameInput.text().strip()
+        location = self.ui.locationInput.text().strip()
+        status = Status[self.ui.statusCombo.currentText()]
+        missions = self.ui.missionsInput.text().strip()
+
+        if not all([name, codeName, location, missions]):
+            self.show_message("Error", "All fields must be filled.")
+            return
+
+        with self.dal as dal:
+            if dal.get_by_codeName(codeName):
+                self.show_message("Error", "Agent with this codeName already exists.")
+                return
+            try:
+                missions_completed = int(missions)
+                agent = Agent(codeName=codeName, realName=name, location=location, 
+                            status=status, missionsCompleted=missions_completed)
+                dal.create(agent)
+                agent = dal.get_by_codeName(codeName)
+                self.ui.outputArea.setPlainText(f"Agent created successfully:\n{agent}")
+                self.clear_inputs()
+            except ValueError:
+                self.show_message("Error", "Missions completed must be a number.")
+
+    def update_agent(self):
+        self.show_message("Info", "Update functionality not implemented yet.")
+
+    def get_agent(self):
+        search_type = self.ui.searchCombo.currentText()
+        search_value = self.ui.searchInput.text().strip()
+
+        if not search_value:
+            self.show_message("Error", "Please enter a search value.")
+            return
+
+        with self.dal as dal:
+            if search_type == "ID":
+                agent = dal.get_by_id(search_value)
+            else:
+                agent = dal.get_by_codeName(search_value)
+            
+            if agent is None:
+                self.ui.outputArea.setPlainText("Agent not found.")
+            else:
+                self.ui.outputArea.setPlainText(str(agent))
+
+    def delete_agent(self):
+        search_type = self.ui.searchCombo.currentText()
+        search_value = self.ui.searchInput.text().strip()
+
+        if not search_value:
+            self.show_message("Error", "Please enter a search value.")
+            return
+
+        with self.dal as dal:
+            if search_type == "ID":
+                agent = dal.get_by_id(search_value)
+                agent_id = search_value
+            else:
+                agent = dal.get_by_codeName(search_value)
+                agent_id = agent.id if agent else None
+
+            if agent is None:
+                self.ui.outputArea.setPlainText("Agent not found.")
+                return
+            
+            dal.delete(agent_id)
+            self.ui.outputArea.setPlainText(f"{agent} is deleted.")
+
+    def get_all_agents(self):
+        with self.dal as dal:
+            agents = dal.get_all()
+            if not agents:
+                self.ui.outputArea.setPlainText("No agents found.")
+                return
+            output = "\n".join([ f"\n _____\n{str(agent)}" for agent in agents])
+            self.ui.outputArea.setPlainText(output)
+
+    def show_message(self, title, message):
+        QMessageBox.information(self, title, message)
+
+    def clear_inputs(self):
+        self.ui.nameInput.clear()
+        self.ui.codeNameInput.clear()
+        self.ui.locationInput.clear()
+        self.ui.missionsInput.clear()
+        self.ui.searchInput.clear()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = AgentMenu(Agent_dal())
+    window.show()
+    sys.exit(app.exec())
