@@ -25,7 +25,7 @@ class Agent(Base):
         return object.__new__(cls)
 
     def __str__(self) -> str:
-        return f" Agent id: {self.id}\n code Name: {self.codeName}\n real Name: {self.realName}\n location: {self.location}\n status: {self.status}\n missions Completed: {self.missionsCompleted}"
+        return f"🪪 Agent id: {self.id}\n🧑‍💻 code Name: {self.codeName}\n😊 real Name: {self.realName}\n🏢 location: {self.location}\n🏳️ status: {self.status}\n☢️ missions Completed: {self.missionsCompleted}"
     
     
 if __name__ == "__main__":

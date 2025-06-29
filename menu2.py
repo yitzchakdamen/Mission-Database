@@ -31,13 +31,20 @@ class menu:
             status = self.get_status()
             missionsCompleted = st.number_input("Missions", min_value=0, step=1)
             submitted = st.form_submit_button("Create")
-            
             if submitted:
-                with self.dal as dal:
-                    agent = Agent(codeName=codeName, realName=name, location=location,
-                                  status=status, missionsCompleted=missionsCompleted)
-                    dal.create(agent)
-                    st.success("Agent created")
+                if  name and codeName and location and status and missionsCompleted:
+                    with self.dal as dal:
+                        agent = dal.get_by_codeName(codeName)
+                        if agent:
+                            st.error("סוכן כבר קיים") 
+                            return
+                    with self.dal as dal:
+                        agent = Agent(codeName=codeName, realName=name, location=location,
+                                    status=status, missionsCompleted=missionsCompleted)
+                        dal.create(agent)
+                        st.success("Agent created")
+                else:
+                    st.error("Please fill all the fields")
 
     def update_agent(self):
         st.info("Update agent not implemented yet.")
@@ -45,25 +52,31 @@ class menu:
     def get_agent(self):
         st.subheader("שליפת סוכן")
         agent_id = self.get_id()
-        if agent_id and st.button("חפש סוכן"):
-            with self.dal as dal:
-                agent = dal.get_by_id(agent_id)
-                if agent:
-                    st.write(agent)
-                else:
-                    st.error("סוכן לא נמצא")
+        if st.button("חפש סוכן"):
+            if agent_id:
+                with self.dal as dal:
+                    agent = dal.get_by_id(agent_id)
+                    if agent:
+                        st.write(agent)
+                    else:
+                        st.error("סוכן לא נמצא")
+            else:
+                st.error("סוכן לא נמצא")
 
     def delete_agent(self):
         st.subheader("מחיקת סוכן")
         agent_id = self.get_id()
-        if agent_id and st.button("מחק סוכן"):
-            with self.dal as dal:
-                agent = dal.get_by_id(agent_id)
-                if agent:
-                    dal.delete(agent_id)
-                    st.success("סוכן נמחק בהצלחה")
-                else:
-                    st.error("סוכן לא נמצא")
+        if st.button("מחק סוכן"):
+            if agent_id:
+                with self.dal as dal:
+                    agent = dal.get_by_id(agent_id)
+                    if agent:
+                        dal.delete(agent_id)
+                        st.success("סוכן נמחק בהצלחה")
+                    else:
+                        st.error("סוכן לא נמצא")
+            else:
+                st.error("סוכן לא נמצא")
 
     def get_all_agents(self):
         st.subheader("רשימת כל הסוכנים")
@@ -76,16 +89,16 @@ class menu:
 
     def get_id(self):
         st.subheader("בחר איך לזהות את הסוכן")
-        method = st.radio("שיטת זיהוי:", ["לפי ID", "לפי codeName"])
+        method = st.radio("שיטת זיהוי:", ["ID", "codeName"])
 
         agent_id = None
 
-        if method == "לפי ID":
+        if method == "ID":
             id_input = st.text_input("הכנס את ה-ID של הסוכן:")
             if id_input:
                 agent_id = id_input
 
-        elif method == "לפי codeName":
+        elif method == "codeName":
             code_input = st.text_input("הכנס את ה-codeName של הסוכן:")
             if code_input:
                 with self.dal as dal:

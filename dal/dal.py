@@ -4,7 +4,7 @@ from dal.base import Base
 
 
 
-class DAL:
+class   DAL:
     
     _instance = None
     
